@@ -26,8 +26,11 @@
   },
   "devDependencies": {
     "@tsconfig/node24": "^24.0.4",
+    "@types/bcrypt": "^6.0.0",
     "@types/cookie-parser": "^1.4.10",
     "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.0.0",
     "@types/node": "^25.3.5",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
