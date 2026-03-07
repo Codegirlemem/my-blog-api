@@ -100,7 +100,6 @@ export const deleteComment = async (
       return next(new AppError("Comment not found", 404));
     }
 
-    const postId = comment.post;
     const isAuthor = comment.author.equals(req.user._id);
     const isAdmin = req.user.role === TRoles.Admin;
 
@@ -110,15 +109,9 @@ export const deleteComment = async (
       );
     }
 
-    // 1. Remove the comment
     await comment.deleteOne();
 
-    // 2. Decrement the post's commentCount
-    await BlogPostModel.findByIdAndUpdate(postId, {
-      $inc: { commentCount: -1 },
-    });
-
-    res.status(200).json({
+    res.status(204).json({
       success: true,
       message: "Comment deleted successfully",
     });

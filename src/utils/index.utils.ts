@@ -3,7 +3,6 @@ import { v2 as cloudinary } from "cloudinary";
 import AppError from "./appError.utils.js";
 
 export const allowedFiles = ["image/jpeg", "image/png", "image/webp"];
-export const allowedUserUpdates = ["username", "fullname", "password"];
 export const restrictionDays = Number(process.env.RESTRICTION_DAYS) || 3;
 
 export const uploadToCloudinary = async (filePath: string) => {
@@ -27,4 +26,9 @@ export const deleteCloudImage = async (public_id: string) => {
       console.error("Failed to delete old avatar:", destroyError);
     }
   }
+};
+
+export const CapitalizeFirstLetter = (word: string) => {
+  const newWord = word.charAt(0).toUpperCase + word.slice(1);
+  return newWord;
 };

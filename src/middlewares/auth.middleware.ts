@@ -6,8 +6,6 @@ import { UserRequest } from "../types/express.js";
 import { AuthPayload } from "../types/index.type.js";
 import UserModel from "../models/user.model.js";
 
-const { JsonWebTokenError, NotBeforeError, TokenExpiredError } = jwt;
-
 export const isAuthenticated = async (
   req: UserRequest,
   res: Response,
@@ -17,7 +15,7 @@ export const isAuthenticated = async (
     const token = req.cookies[process.env.COOKIE_NAME!];
 
     if (!token) {
-      return next(new AppError("Unauthenticated user. Login to continue", 401));
+      return next(new AppError("Access denied. Login to continue", 401));
     }
 
     const decodedToken = jwt.verify(
@@ -30,7 +28,7 @@ export const isAuthenticated = async (
       .lean();
 
     if (!user) {
-      return next(new AppError("User does not exist", 401));
+      return next(new AppError("Access denied", 401));
     }
 
     if (user.status === TUserStatus.Blocked) {
@@ -45,15 +43,6 @@ export const isAuthenticated = async (
 
     next();
   } catch (error: unknown) {
-    if (
-      error instanceof JsonWebTokenError ||
-      error instanceof TokenExpiredError ||
-      error instanceof NotBeforeError
-    ) {
-      return next(
-        new AppError("Invalid or expired token. Please login again", 401),
-      );
-    }
     next(error);
   }
 };

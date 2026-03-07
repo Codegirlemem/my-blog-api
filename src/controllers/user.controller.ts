@@ -10,17 +10,11 @@ import {
 } from "../zod/user.zod.js";
 import AppError from "../utils/appError.utils.js";
 import {
-  allowedUserUpdates,
   deleteCloudImage,
   restrictionDays,
   uploadToCloudinary,
 } from "../utils/index.utils.js";
-import {
-  TAdminProfileUpdate,
-  TAvatarImage,
-  TUserProfileUpdate,
-  TUserStatus,
-} from "../types/index.type.js";
+import { TAvatarImage, TUserStatus } from "../types/index.type.js";
 
 export const getAllUsers = async (
   req: UserRequest,
@@ -48,18 +42,18 @@ export const getUserProfile = async (
   next: NextFunction,
 ) => {
   try {
-    if (!req.user) return next(new AppError("Unathourized", 401));
+    if (!req.user) return next(new AppError("Access denied", 401));
 
-    const targetId = req.params.id || req.user._id;
-    const id = objectIdSchema.parse(targetId);
+    const id = req.params.id
+      ? objectIdSchema.parse(req.params.id)
+      : req.user._id;
 
-    const isPrivate =
-      !req.params.id || req.params.id === req.user._id.toString();
+    const isSelf = req.user._id.toString() === id.toString();
 
     let user;
 
-    if (!isPrivate) {
-      return next(new AppError("Forbidden", 403));
+    if (!isSelf) {
+      return next(new AppError("This is a private account", 403));
     } else {
       user = await UserModel.findById(id)
         .select("-__v")
@@ -117,22 +111,12 @@ export const updateUser = async (
   next: NextFunction,
 ) => {
   try {
-    if (!req.user) return next(new AppError("Unathourized", 401));
+    if (!req.user) return next(new AppError("Access denied", 401));
 
     const _id = objectIdSchema.parse(req.user._id);
     const updates = updateUserSchema.parse(req.body);
 
-    const userUpdates = Object.fromEntries(
-      Object.entries(updates).filter(
-        ([key, value]) =>
-          allowedUserUpdates.includes(key) &&
-          value !== undefined &&
-          value !== null &&
-          value !== "",
-      ),
-    ) as TUserProfileUpdate;
-
-    const user = await UserModel.findByIdAndUpdate(_id, userUpdates, {
+    const user = await UserModel.findByIdAndUpdate(_id, updates, {
       runValidators: true,
       returnDocument: "after",
     })
@@ -152,6 +136,7 @@ export const updateUser = async (
     next(error);
   }
 };
+
 export const uploadAvatar = async (
   req: UserRequest,
   res: Response,
@@ -160,7 +145,7 @@ export const uploadAvatar = async (
   let avatar: TAvatarImage | undefined;
 
   try {
-    if (!req.user) return next(new AppError("Unathourized", 401));
+    if (!req.user) return next(new AppError("Access denied", 401));
 
     const _id = objectIdSchema.parse(req.user._id);
     const avatarPath = req.file?.path;
@@ -205,14 +190,15 @@ export const deleteUser = async (
   next: NextFunction,
 ) => {
   try {
-    if (!req.user) return next(new AppError("Unathourized", 401));
+    if (!req.user) return next(new AppError("Access denied", 401));
 
-    const id = objectIdSchema.parse(req.user._id);
+    const id = req.user._id;
     const user = await UserModel.findById(id);
 
     if (!user) {
-      return next(new AppError("User not found", 404));
+      return next(new AppError("User not found or already deleted", 404));
     }
+
     const userAvatar = user.avatar?.public_id;
     await user.deleteOne();
 
@@ -225,7 +211,7 @@ export const deleteUser = async (
     });
 
     return res
-      .status(200)
+      .status(204)
       .json({ success: true, message: "Profile deleted successfully" });
   } catch (error) {
     next(error);
@@ -238,14 +224,14 @@ export const updateUserByAdmin = async (
   next: NextFunction,
 ) => {
   try {
-    if (!req.user) return next(new AppError("Unathourized", 401));
+    if (!req.user) return next(new AppError("Access denied", 401));
 
     const _id = objectIdSchema.parse(req.params.id);
-    const isSelf = !req.params.id || req.params.id === req.user._id.toString();
+    const isSelf = req.user._id.toString() === _id.toString();
 
     if (isSelf) {
       return next(
-        new AppError("Cannot update you own account be admin action", 403),
+        new AppError("You cannot update your own account by admin action", 403),
       );
     }
 
@@ -255,7 +241,7 @@ export const updateUserByAdmin = async (
       Object.entries(updates).filter(
         ([_, value]) => value !== undefined && value !== null,
       ),
-    ) as TAdminProfileUpdate;
+    );
 
     let user = await UserModel.findById(_id).select(
       "+password -__v -restrictionExpires",
@@ -270,10 +256,11 @@ export const updateUserByAdmin = async (
         : null;
 
     let data: any;
+
     if (restrict) {
-      data = { ...updates, restrictionExpires: restrict };
+      data = { ...adminUpdates, restrictionExpires: restrict };
     } else {
-      data = updates;
+      data = { ...adminUpdates, restrictionExpires: undefined };
     }
 
     user.set({ ...data });

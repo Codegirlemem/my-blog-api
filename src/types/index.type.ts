@@ -34,8 +34,8 @@ export type LeanUserModel = UserBase & {
 
 export type UserAuthPayload = LeanUserModel & JwtPayload;
 
-export type TUserProfileUpdate = z.infer<typeof updateUserSchema>;
-export type TUserUpdateData = TUserProfileUpdate & { avatar?: TAvatarImage };
+// export type TUserProfileUpdate = z.infer<typeof updateUserSchema>;
+// export type TUserUpdateData = TUserProfileUpdate & { avatar?: TAvatarImage };
 export type TAdminProfileUpdate = z.infer<typeof updateUserByAdminSchema>;
 
 type BlogPostBase = InferSchemaType<typeof blogPostSchema>;

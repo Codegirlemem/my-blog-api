@@ -92,7 +92,7 @@ export const deletePost = async (
 
     await post.deleteOne();
 
-    res.status(200).json({
+    res.status(204).json({
       success: true,
       message: "Post deleted successfully",
     });
@@ -149,6 +149,7 @@ export const getAllPosts = async (
 ) => {
   try {
     const posts = await BlogPostModel.find()
+      .select("title createdAt likeCount commentCount")
       .populate("author", "username avatar")
       .sort({ createdAt: -1 });
 

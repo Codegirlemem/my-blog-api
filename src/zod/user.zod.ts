@@ -22,6 +22,12 @@ export const usernameInputSchema = z
   .min(3, "Username must be at least 3 characters")
   .max(20, "Username must not exceed 20 characters");
 
+export const fullnameInputSchema = z
+  .string()
+  .trim()
+  .min(3, "Full name must be at least 3 characters")
+  .max(20, "Full name must not exceed 20 characters");
+
 export const userZodSchema = z.strictObject({
   email: emailInputSchema,
   password: passwordInputSchema,
@@ -33,17 +39,13 @@ export const loginZodSchema = userZodSchema.pick({
   password: true,
 });
 
-export const updateUserSchema = z
-  .strictObject({
-    username: usernameInputSchema.optional(),
-    password: passwordInputSchema.optional(),
-    fullname: z
-      .string()
-      .trim()
-      .min(3, "Username must be at least 3 characters")
-      .max(20, "Username must not exceed 20 characters")
-      .optional(),
+export const updateUserSchema = userZodSchema
+  .omit({ email: true })
+  .partial()
+  .extend({
+    fullname: fullnameInputSchema.optional(),
   })
+  .strict()
   .refine(
     (data) =>
       Object.values(data).some(
