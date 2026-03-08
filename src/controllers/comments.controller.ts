@@ -111,7 +111,7 @@ export const deleteComment = async (
 
     await comment.deleteOne();
 
-    res.status(204).json({
+    res.status(200).json({
       success: true,
       message: "Comment deleted successfully",
     });

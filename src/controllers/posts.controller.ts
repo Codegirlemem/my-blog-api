@@ -92,7 +92,7 @@ export const deletePost = async (
 
     await post.deleteOne();
 
-    res.status(204).json({
+    res.status(200).json({
       success: true,
       message: "Post deleted successfully",
     });

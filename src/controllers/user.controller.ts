@@ -211,7 +211,7 @@ export const deleteUser = async (
     });
 
     return res
-      .status(204)
+      .status(200)
       .json({ success: true, message: "Profile deleted successfully" });
   } catch (error) {
     next(error);
