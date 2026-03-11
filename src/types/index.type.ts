@@ -19,7 +19,7 @@ export interface AuthPayload extends JwtPayload {
 export enum TUserStatus {
   Active = "active",
   Restricted = "restricted",
-  Blocked = "Blocked",
+  Blocked = "blocked",
 }
 
 export type TAvatarImage = {
