@@ -32,6 +32,7 @@ export const userZodSchema = z.strictObject({
   email: emailInputSchema,
   password: passwordInputSchema,
   username: usernameInputSchema,
+  role: z.enum(Object.values(TRoles)).default(TRoles.User),
 });
 
 export const loginZodSchema = userZodSchema.pick({
@@ -40,7 +41,7 @@ export const loginZodSchema = userZodSchema.pick({
 });
 
 export const updateUserSchema = userZodSchema
-  .omit({ email: true })
+  .omit({ email: true, role: true })
   .partial()
   .extend({
     fullname: fullnameInputSchema.optional(),

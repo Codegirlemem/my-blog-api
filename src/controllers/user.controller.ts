@@ -250,20 +250,18 @@ export const updateUserByAdmin = async (
     if (!user) {
       return next(new AppError("User not found", 404));
     }
-    const restrict =
-      updates.status === TUserStatus.Restricted
-        ? new Date(Date.now() + restrictionDays * 24 * 60 * 60 * 1000)
-        : null;
 
-    let data: any;
+    user.set(adminUpdates);
 
-    if (restrict) {
-      data = { ...adminUpdates, restrictionExpires: restrict };
-    } else {
-      data = { ...adminUpdates, restrictionExpires: undefined };
+    if (updates.status !== undefined) {
+      const restrict =
+        updates.status === TUserStatus.Restricted
+          ? new Date(Date.now() + restrictionDays * 24 * 60 * 60 * 1000)
+          : undefined;
+
+      user.set({ restrictionExpires: restrict });
     }
 
-    user.set({ ...data });
     user = await user.save();
 
     res.status(200).json({
