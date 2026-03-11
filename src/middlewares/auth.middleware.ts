@@ -52,33 +52,55 @@ export const isAdmin = (
   res: Response,
   next: NextFunction,
 ) => {
-  if (req.user?.role !== TRoles.Admin) {
-    return next(new AppError("Forbidden: Admin", 403));
-  }
+  try {
+    if (req.user?.role !== TRoles.Admin) {
+      return next(new AppError("Forbidden: Admin", 403));
+    }
 
-  next();
+    next();
+  } catch (error) {
+    next();
+  }
 };
 
-export const isNotRestricted = (
+export const isNotRestricted = async (
   req: UserRequest,
   res: Response,
   next: NextFunction,
 ) => {
-  if (!req.user) {
-    return next(new AppError("Unathenticated user: Login to continue", 401));
-  }
-  if (
-    req.user.status === TUserStatus.Restricted &&
-    req.user.restrictionExpires &&
-    req.user.restrictionExpires > new Date()
-  ) {
-    return next(
-      new AppError(
-        `Account temporarily restricted from posting till ${req.user.restrictionExpires.toLocaleString()}`,
-        403,
-      ),
-    );
-  }
+  try {
+    if (!req.user) {
+      return next(new AppError("Unathenticated user: Login to continue", 401));
+    }
+    if (
+      req.user.status === TUserStatus.Restricted &&
+      req.user.restrictionExpires &&
+      req.user.restrictionExpires > new Date()
+    ) {
+      return next(
+        new AppError(
+          `Account temporarily restricted from posting till ${req.user.restrictionExpires.toLocaleString()}`,
+          403,
+        ),
+      );
+    }
 
-  next();
+    if (
+      req.user.status === TUserStatus.Restricted &&
+      req.user.restrictionExpires &&
+      req.user.restrictionExpires <= new Date()
+    ) {
+      await UserModel.updateOne(
+        { _id: req.user._id },
+        {
+          $set: { status: TUserStatus.Active },
+          $unset: { restrictionExpires: "" },
+        },
+      );
+    }
+
+    next();
+  } catch (error) {
+    next();
+  }
 };

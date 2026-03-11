@@ -68,13 +68,17 @@ export const loginUser = async (
 };
 
 export const logoutUser = (req: Request, res: Response, next: NextFunction) => {
-  res.clearCookie(process.env.COOKIE_NAME!, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-  });
+  try {
+    res.clearCookie(process.env.COOKIE_NAME!, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+    });
 
-  return res
-    .status(200)
-    .json({ success: true, message: "Logged out successfully" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Logged out successfully" });
+  } catch (error) {
+    next(error);
+  }
 };
